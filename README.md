@@ -29,7 +29,7 @@ Open a bash shell, change to project directory and run parallel_gold.
 ```bash
 bash
 cd docking_directory
-parallel_gold -s ligands_for_docking.sdf -g gold.conf -p 6
+parallel_gold -g gold.conf -p 6
 ```
 
 ## Copyright

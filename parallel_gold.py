@@ -4,6 +4,36 @@ import shutil
 import subprocess
 
 
+logo = '\n'.join(["       v.alpha        _ _     _    ___  ___  _    ___  ",
+                  "  _ __  __ _ _ _ __ _| | |___| |  / __|/ _ \| |  |   \ ",
+                  " | '_ \/ _` | '_/ _` | | / -_) | | (_ | (_) | |__| |) |",
+                  " | .__/\__,_|_| \__,_|_|_\___|_|  \___|\___/|____|___/ ",
+                  " |_|                                                   ",
+                  "  Run GOLD docking in parallel by splitting the input  ",
+                  "         sdf-file and running separate dockings.       ",
+                  ""])
+
+
+def get_sdf_path(gold_conf_path):
+    """
+    This function extracts the sdf path containing molecules for docking from a gold conf-file.
+
+    Parameters
+    ----------
+    gold_conf_path : str
+        Full path to gold conf-file.
+
+    Returns
+    -------
+    sdf_path : str
+        Full path to sdf-file.
+    """
+    with open(gold_conf_path, 'r') as rf:
+        for line in rf.readlines():
+            if 'ligand_data_file' in line:
+                return line.strip().split(' ')[1]
+
+
 def count_sdf_mols(sdf_path):
     """
     This function returns the number of molecules in an sdf-file.
@@ -114,16 +144,15 @@ if __name__ == "__main__":
     description = 'Run GOLD docking in parallel by splitting the input sdf-file and running separate dockings.'
     parser = argparse.ArgumentParser(prog='moldbprep', description=description,
                                      formatter_class=argparse.RawTextHelpFormatter)
-    parser.add_argument('-s', dest='sdf_path', help='path to sdf file for docking', required=True)
     parser.add_argument('-g', dest='gold_conf_path', help='path to gold config file', required=True)
-    parser.add_argument('-o', dest='output_directory', help='path to output directory', default='.')
+    parser.add_argument('-o', dest='output_directory', help='path to output directory', default='output')
     parser.add_argument('-p', dest='num_processes', help='number of parallel processes', default=1)
     parser.add_argument('-c', dest='clean', action='store_true', help='Merge results and clean directory')
-    sdf_path = os.path.abspath(parser.parse_args().sdf_path)
     gold_conf_path = os.path.abspath(parser.parse_args().gold_conf_path)
     output_directory = os.path.abspath(parser.parse_args().output_directory)
     num_processes = int(parser.parse_args().num_processes)
     clean = parser.parse_args().clean
+    sdf_path = get_sdf_path(gold_conf_path)
     make_directories(output_directory, num_processes)
     split_sdf_file(sdf_path, output_directory, num_processes)
     run_docking(output_directory, num_processes, gold_conf_path)
