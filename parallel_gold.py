@@ -137,7 +137,8 @@ def run_docking(output_directory, num_processes, gold_conf_path):
                         wf.write('concatenated_output {}\n'. format(output_sdf_path))
                     else:
                         wf.write(line)
-        processes.append(Popen('gold_auto {}'.format(gold_conf_path_edit), shell=True))
+        os.chdir(os.path.join(output_directory, str(process_counter)))
+        processes.append(Popen('gold_auto gold.conf', shell=True))
     for process in processes:
         process.wait()
     return
