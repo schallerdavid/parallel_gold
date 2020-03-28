@@ -1,4 +1,5 @@
 import argparse
+import multiprocessing
 import os
 import shutil
 import subprocess
@@ -120,6 +121,7 @@ def run_docking(output_directory, num_processes, gold_conf_path):
     gold_conf_path : str
         Full path to gold conf-file.
     """
+    processes = []
     for process_counter in range(num_processes):
         gold_conf_path_edit = os.path.join(os.path.join(output_directory, str(process_counter)), 'gold.conf')
         with open(gold_conf_path, 'r') as rf:
@@ -136,7 +138,13 @@ def run_docking(output_directory, num_processes, gold_conf_path):
                         wf.write('concatenated_output {}\n'. format(output_sdf_path))
                     else:
                         wf.write(line)
-        subprocess.run(['gold_auto', 'gold.conf'], cwd=os.path.join(output_directory, str(process_counter)))
+        processes.append(multiprocessing.Process(target=subprocess.run,
+                                                 args=(['gold_auto', 'gold.conf']),
+                                                 kwargs={'cwd': os.path.join(output_directory, str(process_counter))}))
+    for process in processes:
+        process.start()
+    for process in processes:
+        process.join()
     return
 
 
