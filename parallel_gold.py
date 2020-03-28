@@ -1,8 +1,7 @@
 import argparse
-import multiprocessing
 import os
 import shutil
-import subprocess
+from subprocess import Popen
 
 
 logo = '\n'.join(["       v.alpha        _ _     _    ___  ___  _    ___  ",
@@ -138,13 +137,9 @@ def run_docking(output_directory, num_processes, gold_conf_path):
                         wf.write('concatenated_output {}\n'. format(output_sdf_path))
                     else:
                         wf.write(line)
-        processes.append(multiprocessing.Process(target=subprocess.run,
-                                                 args=(['gold_auto', 'gold.conf']),
-                                                 kwargs={'cwd': os.path.join(output_directory, str(process_counter))}))
+        processes.append(Popen('gold_auto {}'.format(gold_conf_path, shell=True)))
     for process in processes:
-        process.start()
-    for process in processes:
-        process.join()
+        process.wait()
     return
 
 
