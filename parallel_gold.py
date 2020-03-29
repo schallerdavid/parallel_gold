@@ -2,6 +2,7 @@ import argparse
 import os
 import shutil
 from subprocess import Popen
+import time
 
 
 logo = '\n'.join(["       v.alpha        _ _     _    ___  ___  _    ___  ",
@@ -144,6 +145,38 @@ def run_docking(output_directory, num_processes, gold_conf_path):
     return
 
 
+def time_to_text(seconds):
+    """
+    This function converts a time in seconds into a reasonable format.
+    
+    Parameters
+    ----------
+    seconds : float
+        Time in seconds.
+    Returns
+    -------
+    time_as_text: str
+        Time in s, min, h, d, weeks or years depending on input.
+    """
+    if seconds > 60:
+        if seconds > 3600:
+            if seconds > 86400:
+                if seconds > 1209600:
+                    if seconds > 62899252:
+                        time_as_text = 'years'
+                    else:
+                        time_as_text = '{} weeks'.format(round(seconds / 1209600, 1))
+                else:
+                    time_as_text = '{} d'.format(round(seconds / 86400, 1))
+            else:
+                time_as_text = '{} h'.format(round(seconds / 3600, 1))
+        else:
+            time_as_text = '{} min'.format(round(seconds / 60, 1))
+    else:
+        time_as_text = '{} s'.format(int(seconds))
+    return time_as_text
+
+
 if __name__ == "__main__":
     description = 'Run GOLD docking in parallel by splitting the input sdf-file and running separate dockings.'
     parser = argparse.ArgumentParser(prog='moldbprep', description=description,
@@ -151,13 +184,23 @@ if __name__ == "__main__":
     parser.add_argument('-g', dest='gold_conf_path', help='path to gold config file', required=True)
     parser.add_argument('-o', dest='output_directory', help='path to output directory', default='output')
     parser.add_argument('-p', dest='num_processes', help='number of parallel processes', default=1)
-    parser.add_argument('-c', dest='clean', action='store_true', help='Merge results and clean directory')
+    parser.add_argument('-v', dest='verbose', action='store_true', help='Dont merge results and keep subprocess output')
     gold_conf_path = os.path.abspath(parser.parse_args().gold_conf_path)
     output_directory = os.path.abspath(parser.parse_args().output_directory)
     num_processes = int(parser.parse_args().num_processes)
-    clean = parser.parse_args().clean
+    verbose = parser.parse_args().verbose
+    start_time = time.time()
     sdf_path = get_sdf_path(gold_conf_path)
     make_directories(output_directory, num_processes)
     split_sdf_file(sdf_path, output_directory, num_processes)
     run_docking(output_directory, num_processes, gold_conf_path)
-    # cleaning is missing
+    if not verbose:
+        with open(os.path.join(output_directory, 'results.sdf'), 'w') as wf:
+            for counter in range(num_processes):
+                file_path = os.path.join(os.path.join(output_directory, str(counter)), 'results.sdf')
+                try:
+                    with open(file_path, 'r') as fr:
+                        shutil.copyfileobj(fr, wf)
+                except FileNotFoundError:
+                    pass
+    print('Finished after {}.'.format(time_to_text(time.time() - start_time)))
