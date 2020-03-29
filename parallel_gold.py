@@ -148,7 +148,7 @@ def run_docking(output_directory, num_processes, gold_conf_path):
 def time_to_text(seconds):
     """
     This function converts a time in seconds into a reasonable format.
-    
+
     Parameters
     ----------
     seconds : float
@@ -201,6 +201,7 @@ if __name__ == "__main__":
                 try:
                     with open(file_path, 'r') as fr:
                         shutil.copyfileobj(fr, wf)
+                    shutil.rmtree(os.path.join(output_directory, str(counter)))
                 except FileNotFoundError:
                     pass
     print('Finished after {}.'.format(time_to_text(time.time() - start_time)))
