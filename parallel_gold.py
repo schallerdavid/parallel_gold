@@ -135,7 +135,7 @@ def run_docking(output_directory, num_processes, gold_conf_path):
                     elif 'concatenated_output' in line:
                         output_sdf_path = os.path.join(os.path.join(output_directory, str(process_counter)),
                                                        'results.sdf')
-                        wf.write('concatenated_output {}\n'. format(output_sdf_path))
+                        wf.write('concatenated_output = {}\n'. format(output_sdf_path))
                     else:
                         wf.write(line)
         os.chdir(os.path.join(output_directory, str(process_counter)))
