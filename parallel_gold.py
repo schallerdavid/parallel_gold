@@ -128,7 +128,7 @@ def make_directories(output_directory, num_directories):
     return
 
 
-def run_docking(output_directory, num_processes, gold_conf_path, host):
+def run_docking(output_directory, num_processes, gold_conf_path, slurm_host):
     """
     This function runs docking with GOLD.
 
@@ -140,7 +140,7 @@ def run_docking(output_directory, num_processes, gold_conf_path, host):
         Number of parallel GOLD dockings.
     gold_conf_path : str
         Full path to gold conf-file.
-    host :
+    slurm_host :
     """
     processes = []
     for process_counter in range(num_processes):
@@ -160,10 +160,10 @@ def run_docking(output_directory, num_processes, gold_conf_path, host):
                     else:
                         wf.write(line)
         os.chdir(os.path.join(output_directory, str(process_counter)))
-        if host == 'localhost':
+        if slurm_host == 'localhost':
             processes.append(Popen('gold_auto gold.conf', shell=True))
         else:
-            processes.append(Popen('srun -p{} -c 1 gold_auto gold.conf'.format(host), shell=True))
+            processes.append(Popen('srun -p{} -c 1 gold_auto gold.conf'.format(slurm_host), shell=True))
     for process in processes:
         process.wait()
     return
@@ -175,11 +175,11 @@ if __name__ == "__main__":
                                      formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('-g', dest='gold_conf_path', help='path to gold config file', required=True)
     parser.add_argument('-p', dest='num_processes', help='number of parallel processes', default=1)
-    parser.add_argument('-h', dest='host', help='slurm host', default='localhost')
+    parser.add_argument('-s', dest='slurm_host', help='slurm host', default='localhost')
     parser.add_argument('-v', dest='verbose', action='store_true', help='Dont merge results and keep subprocess output')
     gold_conf_path = os.path.abspath(parser.parse_args().gold_conf_path)
     num_processes = int(parser.parse_args().num_processes)
-    host = parser.parse_args().num_processes
+    slurm_host = parser.parse_args().slurm_host
     verbose = parser.parse_args().verbose
     start_time = time.time()
     input_sdf_path = get_input_sdf_path(gold_conf_path)
@@ -187,7 +187,7 @@ if __name__ == "__main__":
     output_directory = os.path.dirname(output_sdf_path)
     make_directories(output_directory, num_processes)
     split_sdf_file(input_sdf_path, output_directory, num_processes)
-    run_docking(output_directory, num_processes, gold_conf_path, host)
+    run_docking(output_directory, num_processes, gold_conf_path, slurm_host)
     if not verbose:
         with open(os.path.join(output_sdf_path), 'w') as wf:
             for counter in range(num_processes):
