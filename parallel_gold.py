@@ -145,38 +145,6 @@ def run_docking(output_directory, num_processes, gold_conf_path):
     return
 
 
-def time_to_text(seconds):
-    """
-    This function converts a time in seconds into a reasonable format.
-
-    Parameters
-    ----------
-    seconds : float
-        Time in seconds.
-    Returns
-    -------
-    time_as_text: str
-        Time in s, min, h, d, weeks or years depending on input.
-    """
-    if seconds > 60:
-        if seconds > 3600:
-            if seconds > 86400:
-                if seconds > 1209600:
-                    if seconds > 62899252:
-                        time_as_text = 'years'
-                    else:
-                        time_as_text = '{} weeks'.format(round(seconds / 1209600, 1))
-                else:
-                    time_as_text = '{} d'.format(round(seconds / 86400, 1))
-            else:
-                time_as_text = '{} h'.format(round(seconds / 3600, 1))
-        else:
-            time_as_text = '{} min'.format(round(seconds / 60, 1))
-    else:
-        time_as_text = '{} s'.format(int(seconds))
-    return time_as_text
-
-
 if __name__ == "__main__":
     description = 'Run GOLD docking in parallel by splitting the input sdf-file and running separate dockings.'
     parser = argparse.ArgumentParser(prog='moldbprep', description=description,
@@ -204,4 +172,4 @@ if __name__ == "__main__":
                     shutil.rmtree(os.path.join(output_directory, str(counter)))
                 except FileNotFoundError:
                     pass
-    print('Finished after {}.'.format(time_to_text(time.time() - start_time)))
+    print('Finished after {} h.'.format(round((time.time() - start_time) / 3600), 2))
