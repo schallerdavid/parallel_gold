@@ -174,8 +174,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog='moldbprep', description=description,
                                      formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('-g', dest='gold_conf_path', help='path to gold config file', required=True)
-    parser.add_argument('-p', dest='num_processes', help='number of parallel processes', default=1)
-    parser.add_argument('-s', dest='slurm_host', help='slurm host', default='localhost')
+    parser.add_argument('-p', dest='num_processes', help='number of parallel processes, default = 1', default=1)
+    parser.add_argument('-s', dest='slurm_host', help='slurm host, default = localhost', default='localhost')
     parser.add_argument('-v', dest='verbose', action='store_true', help='Dont merge results and keep subprocess output')
     gold_conf_path = os.path.abspath(parser.parse_args().gold_conf_path)
     num_processes = int(parser.parse_args().num_processes)
