@@ -15,7 +15,7 @@ logo = '\n'.join(["       v.alpha        _ _     _    ___  ___  _    ___  ",
                   ""])
 
 
-def get_sdf_path(gold_conf_path):
+def get_input_sdf_path(gold_conf_path):
     """
     This function extracts the sdf path containing molecules for docking from a gold conf-file.
 
@@ -33,6 +33,26 @@ def get_sdf_path(gold_conf_path):
         for line in rf.readlines():
             if 'ligand_data_file' in line:
                 return line.strip().split(' ')[1]
+
+
+def get_output_sdf_path(gold_conf_path):
+    """
+    This function extracts the output sdf path for docking results from a gold conf-file.
+
+    Parameters
+    ----------
+    gold_conf_path : str
+        Full path to gold conf-file.
+
+    Returns
+    -------
+    sdf_path : str
+        Full path to sdf-file.
+    """
+    with open(gold_conf_path, 'r') as rf:
+        for line in rf.readlines():
+            if 'concatenated_output' in line:
+                return line.strip().split(' ')[2]
 
 
 def count_sdf_mols(sdf_path):
@@ -71,7 +91,7 @@ def split_sdf_file(input_sdf_path, output_directory, num_files):
     num_files : int
         Number of output sdf-files to generate.
     """
-    num_mols = count_sdf_mols(sdf_path)
+    num_mols = count_sdf_mols(input_sdf_path)
     with open(input_sdf_path, 'r') as rf:
         for file_counter in range(num_files):
             mol_counter = 0
@@ -100,10 +120,10 @@ def make_directories(output_directory, num_directories):
     num_directories : int
         Number of output directories.
     """
-    if os.path.isdir(output_directory):
-        shutil.rmtree(output_directory)
     for directory_counter in range(num_directories):
         directory = os.path.join(output_directory, str(directory_counter))
+        if os.path.isdir(directory):
+            shutil.rmtree(directory)
         os.makedirs(directory)
     return
 
@@ -150,17 +170,17 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog='moldbprep', description=description,
                                      formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('-g', dest='gold_conf_path', help='path to gold config file', required=True)
-    parser.add_argument('-o', dest='output_directory', help='path to output directory', default='output')
     parser.add_argument('-p', dest='num_processes', help='number of parallel processes', default=1)
     parser.add_argument('-v', dest='verbose', action='store_true', help='Dont merge results and keep subprocess output')
     gold_conf_path = os.path.abspath(parser.parse_args().gold_conf_path)
-    output_directory = os.path.abspath(parser.parse_args().output_directory)
     num_processes = int(parser.parse_args().num_processes)
     verbose = parser.parse_args().verbose
     start_time = time.time()
-    sdf_path = get_sdf_path(gold_conf_path)
+    input_sdf_path = get_input_sdf_path(gold_conf_path)
+    output_sdf_path = get_output_sdf_path(gold_conf_path)
+    output_directory = os.path.dirname(output_sdf_path)
     make_directories(output_directory, num_processes)
-    split_sdf_file(sdf_path, output_directory, num_processes)
+    split_sdf_file(input_sdf_path, output_directory, num_processes)
     run_docking(output_directory, num_processes, gold_conf_path)
     if not verbose:
         with open(os.path.join(output_directory, 'results.sdf'), 'w') as wf:
